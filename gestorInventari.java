@@ -211,7 +211,7 @@ public class gestorInventari {
 
         case 4:
 
-            System.out.println("Quin preu vols posar?");
+            System.out.println("Quin stock vols posar?");
             int stock_prod = keyboard.nextInt();
             String mod4 = "UPDATE PRODUCTES SET STOCK = ? WHERE ID_PRODCUCTE = ?";
             PreparedStatement p4 = connexioBD.prepareStatement(mod4);
