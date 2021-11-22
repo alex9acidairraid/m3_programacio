@@ -93,10 +93,10 @@ public class gestorInventari {
     }
 
     public static void connexioBD() throws SQLException {
-        String servidor = "jdbc:mysql://192.168.16.150:3306/";
+        String servidor = "jdbc:mysql://localhost:3306/";
         String bbdd = "stock";
-        String user = "dam";
-        String password = "123123123d";
+        String user = "root";
+        String password = "345697Alex";
         connexioBD = DriverManager.getConnection(servidor + bbdd, user, password);
     }
 
@@ -175,50 +175,55 @@ public class gestorInventari {
         switch (eleccio) {
 
         case 1:
-
+            keyboard.nextLine();
             System.out.println("Quin nom vols posar?");
             String nom_prod = keyboard.nextLine();
-            String mod = "UPDATE PRODUCTES SET NOM = ? WHERE ID_PRODCUCTE = ?";
+            String mod = "UPDATE PRODUCTES SET NOM = ? WHERE ID_PRODUCTE = ?";
             PreparedStatement p1 = connexioBD.prepareStatement(mod);
 
             p1.setString(1, nom_prod);
             p1.setInt(2, id_prod);
             p1.executeUpdate();
+            exit = true;
+            break;
 
         case 2:
 
             System.out.println("Quin preu vols posar?");
             int preu_prod = keyboard.nextInt();
-            String mod2 = "UPDATE PRODUCTES SET PREU = ? WHERE ID_PRODCUCTE = ?";
+            String mod2 = "UPDATE PRODUCTES SET PREU = ? WHERE ID_PRODUCTE = ?";
             PreparedStatement p2 = connexioBD.prepareStatement(mod2);
 
             p2.setInt(1, preu_prod);
             p2.setInt(2, id_prod);
             p2.executeUpdate();
+            exit = true;
             break;
 
         case 3:
-
+            keyboard.nextLine();
             System.out.println("Quin material vols posar?");
             String mat_prod = keyboard.nextLine();
-            String mod3 = "UPDATE PRODUCTES SET MATERIAL = ? WHERE ID_PRODCUCTE = ?";
+            String mod3 = "UPDATE PRODUCTES SET MATERIAL = ? WHERE ID_PRODUCTE = ?";
             PreparedStatement p3 = connexioBD.prepareStatement(mod3);
 
             p3.setString(1, mat_prod);
             p3.setInt(2, id_prod);
             p3.executeUpdate();
+            exit = true;
             break;
 
         case 4:
 
             System.out.println("Quin stock vols posar?");
             int stock_prod = keyboard.nextInt();
-            String mod4 = "UPDATE PRODUCTES SET STOCK = ? WHERE ID_PRODCUCTE = ?";
+            String mod4 = "UPDATE PRODUCTES SET STOCK = ? WHERE ID_PRODUCTE = ?";
             PreparedStatement p4 = connexioBD.prepareStatement(mod4);
 
             p4.setInt(1, stock_prod);
             p4.setInt(2, id_prod);
             p4.executeUpdate();
+            exit = true;
             break;
 
         case 5:
