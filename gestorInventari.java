@@ -184,6 +184,13 @@ public class gestorInventari {
             p1.setString(1, nom_prod);
             p1.setInt(2, id_prod);
             p1.executeUpdate();
+
+            if (p1.executeUpdate() != 1) {
+                System.out.println("Hi ha hagut un error inesperat");
+            } else {
+                System.out.println("El canvi s'ha realitzat correctament");
+            }
+
             exit = true;
             break;
 
@@ -197,6 +204,13 @@ public class gestorInventari {
             p2.setInt(1, preu_prod);
             p2.setInt(2, id_prod);
             p2.executeUpdate();
+
+            if (p2.executeUpdate() != 1) {
+                System.out.println("Hi ha hagut un error inesperat");
+            } else {
+                System.out.println("El canvi s'ha realitzat correctament");
+            }
+
             exit = true;
             break;
 
@@ -210,6 +224,13 @@ public class gestorInventari {
             p3.setString(1, mat_prod);
             p3.setInt(2, id_prod);
             p3.executeUpdate();
+
+            if (p3.executeUpdate() != 1) {
+                System.out.println("Hi ha hagut un error inesperat");
+            } else {
+                System.out.println("El canvi s'ha realitzat correctament");
+            }
+
             exit = true;
             break;
 
@@ -223,15 +244,24 @@ public class gestorInventari {
             p4.setInt(1, stock_prod);
             p4.setInt(2, id_prod);
             p4.executeUpdate();
+
+            if (p4.executeUpdate() != 1) {
+                System.out.println("Hi ha hagut un error inesperat");
+            } else {
+                System.out.println("El canvi s'ha realitzat correctament");
+            }
+
             exit = true;
             break;
 
         case 5:
             exit = true;
-        
+
         default:
             System.out.println("No és una opció vàl·lida");
-        } while (!exit);
+        }
+        while (!exit)
+            ;
     }
 
     static void baixaProducte() {
