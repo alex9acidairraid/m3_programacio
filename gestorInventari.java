@@ -259,9 +259,7 @@ public class gestorInventari {
 
         default:
             System.out.println("No és una opció vàl·lida");
-        }
-        while (!exit)
-            ;
+        } while (!exit);
     }
 
     static void baixaProducte() {
