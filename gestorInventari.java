@@ -259,10 +259,19 @@ public class gestorInventari {
 
         default:
             System.out.println("No és una opció vàl·lida");
-        } while (!exit);
+        }
+        while (!exit)
+            ;
     }
 
-    static void baixaProducte() {
+    static void baixaProducte() throws SQLException {
+        System.out.println("Indica la ID del producte que vols eliminar");
+        int del_prod = keyboard.nextInt();
 
+        String del = "DELETE FROM PRODUCTES WHERE ID_PRODUCTE = ?";
+        PreparedStatement delete = connexioBD.prepareStatement(del);
+
+        delete.setInt(1, del_prod);
+        delete.executeUpdate();
     }
 }
