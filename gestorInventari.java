@@ -1,16 +1,20 @@
 package Projecte1;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class gestorInventari {
@@ -46,6 +50,7 @@ public class gestorInventari {
         }
     }
 
+    //Connexió a la nostra base de dades via msql
     public static void connexioBD() throws SQLException {
         String servidor = "jdbc:mysql://192.168.16.150:3306/";
         String bbdd = "stock";
@@ -56,6 +61,7 @@ public class gestorInventari {
 
     public static void menuBD() throws SQLException, FileNotFoundException, IOException {
 
+        //Menu principal que contè tots els nostres metodes separats per un switch, tenim un nextLine que ens permet fer servir la informació que introdueix el usuari.
         do {
             System.out.println("GESTOR D'INVENTARI");
             System.out.println("1. Gestió de productes");
@@ -106,7 +112,7 @@ public class gestorInventari {
                     actualitzacioStock();
                     break;
                 case 3:
-                    
+                    prepararComanda();
                     break;
                 case 4:
 
@@ -118,12 +124,13 @@ public class gestorInventari {
                     System.out.println("La opció sel·leccionada no és vàl·lida");
             }
 
-            System.out.println("\nOpció: " + opcio);
+            System.out.println("\nOpció: " + opcio + "\n");
 
         } while (!exit);
         // desconexioBD();
     }
 
+    //Un mètode soimple per llistar tots els nostres productes.
     static void llistarProductes() throws SQLException {
 
         String consulta = "SELECT * FROM PRODUCTES ORDER BY ID_PRODUCTE";
@@ -137,6 +144,7 @@ public class gestorInventari {
 
     }
 
+    //Un mètode per introduïr i donar d'alta un producte.
     static void altaProductes() throws SQLException {
 
         System.out.println("\nALTA PRODUCTE");
@@ -171,6 +179,7 @@ public class gestorInventari {
         }
     }
 
+    //Modifiquem la informació de un producte, elegirem què volem modificar.
     static void modificacioProductes() throws SQLException {
 
         String consulta = "SELECT * FROM PRODUCTES ORDER BY ID_PRODUCTE";
@@ -207,9 +216,8 @@ public class gestorInventari {
 
                 p1.setString(1, nom_prod);
                 p1.setInt(2, id_prod);
-                p1.executeUpdate();
 
-                if (p1.executeUpdate() != 1) {
+                if (p1.executeUpdate() == 0) {
                     System.out.println("Hi ha hagut un error inesperat");
                 } else {
                     System.out.println("El canvi s'ha realitzat correctament");
@@ -227,9 +235,8 @@ public class gestorInventari {
 
                 p2.setInt(1, preu_prod);
                 p2.setInt(2, id_prod);
-                p2.executeUpdate();
 
-                if (p2.executeUpdate() != 1) {
+                if (p2.executeUpdate() == 0) {
                     System.out.println("Hi ha hagut un error inesperat");
                 } else {
                     System.out.println("El canvi s'ha realitzat correctament");
@@ -239,6 +246,7 @@ public class gestorInventari {
                 break;
 
             case 3:
+
                 keyboard.nextLine();
                 System.out.println("Quin material vols posar?");
                 String mat_prod = keyboard.nextLine();
@@ -247,9 +255,8 @@ public class gestorInventari {
 
                 p3.setString(1, mat_prod);
                 p3.setInt(2, id_prod);
-                p3.executeUpdate();
 
-                if (p3.executeUpdate() != 1) {
+                if (p3.executeUpdate() == 0) {
                     System.out.println("Hi ha hagut un error inesperat");
                 } else {
                     System.out.println("El canvi s'ha realitzat correctament");
@@ -267,9 +274,8 @@ public class gestorInventari {
 
                 p4.setInt(1, stock_prod);
                 p4.setInt(2, id_prod);
-                p4.executeUpdate();
 
-                if (p4.executeUpdate() != 1) {
+                if (p4.executeUpdate() == 0) {
                     System.out.println("Hi ha hagut un error inesperat");
                 } else {
                     System.out.println("El canvi s'ha realitzat correctament");
@@ -279,7 +285,9 @@ public class gestorInventari {
                 break;
 
             case 5:
+
                 exit = true;
+                break;
 
             default:
                 System.out.println("No és una opció vàl·lida");
@@ -288,17 +296,29 @@ public class gestorInventari {
             ;
     }
 
+    //Eliminar un producte, fem servir un stmt.execute("SET FOREIGN_KEY_CHECKS=0"); per poder borrar totes les relacions de les taules en la nostra base de dades.
     static void baixaProducte() throws SQLException {
+
         System.out.println("Indica la ID del producte que vols eliminar");
         int del_prod = keyboard.nextInt();
+
+        Statement stmt = connexioBD.createStatement();
+        stmt.execute("SET FOREIGN_KEY_CHECKS=0");
 
         String del = "DELETE FROM PRODUCTES WHERE ID_PRODUCTE = ?";
         PreparedStatement delete = connexioBD.prepareStatement(del);
 
         delete.setInt(1, del_prod);
         delete.executeUpdate();
+
+        if (delete.executeUpdate() == 0) {
+            System.out.println("Hi ha hagut un error inesperat...");
+        } else {
+            System.out.println("S'ha esborrat el producte correctament.");
+        }
     }
 
+    //Crea 2 carpetes i truca al mètode de actualització i el de moure fitxers i recorre cada fitxer i llegeix els fitxers.
     static void actualitzacioStock() throws SQLException, IOException {
 
         System.out.println("ACTUALITZACIÓ D'ESTOC");
@@ -326,16 +346,17 @@ public class gestorInventari {
 
     }
 
+    //Separa la informació del .txt i actualitza el stock.
     static void actualitzarFitxerBD(File file) throws IOException, SQLException {
 
         // llegeix caracter a caracter
         FileReader reader = new FileReader(file);
 
         try (
-            // llegeix linea a linea molt més eficientment
-            BufferedReader buffer = new BufferedReader(reader)) {
+                // llegeix linea a linea molt més eficientment
+                BufferedReader buffer = new BufferedReader(reader)) {
             String linea;
-                
+
             while ((linea = buffer.readLine()) != null) {
 
                 System.out.println(linea);
@@ -373,22 +394,75 @@ public class gestorInventari {
                 ps_update.executeUpdate();
             }
 
-            //Una manera de tancar-los sense fer servir el try catch resource.
-            //buffer.close();
-            //reader.close();
-        
+            // Una manera de tancar-los sense fer servir el try catch resource.
+            // buffer.close();
+            // reader.close();
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
     }
 
+    //Mou directament el fitxer, de la carpeta PATHPENDENTS i el mou a  la carpeta PATHPROCESSADES.
     static void moureFitxersBD(File files) throws SQLException, IOException {
 
         FileSystem sistemaFicheros = FileSystems.getDefault();
         Path origen = sistemaFicheros.getPath(PATHPENDENTS + files.getName());
         Path desti = sistemaFicheros.getPath(PATHPROCESSADES + files.getName());
-
         Files.move(origen, desti, StandardCopyOption.REPLACE_EXISTING);
         System.out.println("S'ha mogut a processats el fitxer: " + files.getName());
+    }
+
+    //Crea fitxers a partir de la consulta, en la qual, el stock dels productes que crea es de menys de 20. Tambè separa els proveedors i crea un fitxer per cada proveedor i a dintre de cada comanda de proveedor llista els productes als quals els falte més stock.
+    static void prepararComanda() throws SQLException, IOException {
+
+        String cons = "SELECT P.ID_PRODUCTE, P.NOM, P.STOCK, PROV.NOM FROM PRODUCTES P,SUBMINISTRA S, PROVEEDORS PROV WHERE PROV.CODI_PROVEEDOR = S.CODI_PROVEEDOR AND S.ID_PRODUCTE = P.ID_PRODUCTE AND STOCK < 20 ORDER BY PROV.CODI_PROVEEDOR;";
+
+        PreparedStatement comanda = connexioBD.prepareStatement(cons);
+        ResultSet rs = comanda.executeQuery();
+
+        String prov = null;
+        PrintWriter wrtr = null;
+
+        if (rs.next()) {
+            // primera fila del result set
+            prov = rs.getString(4);
+
+            wrtr = capcaleraComandes(prov);
+
+            do {
+                if (!prov.equals(rs.getString(4))) {
+
+                    prov = rs.getString(4);
+                    wrtr.close();
+
+                    wrtr = capcaleraComandes(prov);
+                    
+                    System.out.println("\nID PRODUCTE: " + rs.getString(1) + " " + "\nNOM PRODUCTE: " + rs.getString(2) + " " + "\nSTOCK PRODUCTE: " + rs.getString(3) + " " + "\nNOM PROVEEDOR: " + rs.getString(4));
+                }
+
+                wrtr.println("Proveedor: " + rs.getString("PROV.NOM"));
+                wrtr.println("Id del producte: " + rs.getString("ID_PRODUCTE"));
+                wrtr.println("Stock del producte actual: " + rs.getString("STOCK"));
+                wrtr.println(LocalDate.now());
+                wrtr.println("***********************************************");
+            } while (rs.next());
+            wrtr.close();
+        }
+    }
+
+    //Definim un file writer amb la adreça, un bufered writer i print writer per fer servir aquest mètode amb el mètode anterior i aprofitem per escriure una capcelera per cada arxiu creat amb la informació de la nostra empresa.
+    static PrintWriter capcaleraComandes(String prov) throws SQLException, IOException {
+
+        FileWriter fw = new FileWriter("files\\COMANDES\\" + prov + "_" + LocalDate.now() + "_" + ".txt");
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter wrtr = new PrintWriter(bw);
+
+        wrtr.println("*********************" + LocalDate.now() + "*********************");
+        wrtr.println("Empresa: More STOCK");
+        wrtr.println("Versió: 2.65.47.3");
+        wrtr.println("_______________________________________________");
+        wrtr.println("********************COMANDA********************");
+        return wrtr;
     }
 }
