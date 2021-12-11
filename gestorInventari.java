@@ -30,6 +30,9 @@ public class gestorInventari {
     public static String PATHPROCESSADES = "files/ENTRADES PROCESSADES/";
     public static String COMANDES = "files/COMANDES/";
 
+    public static String[] proveedors = new String[100];
+    public static int[] productes = new int[100];
+
     // Aqui declarem el Scanner per poder introduïr les dades.
     public static Scanner keyboard = new Scanner(System.in);
 
@@ -50,7 +53,7 @@ public class gestorInventari {
         }
     }
 
-    //Connexió a la nostra base de dades via msql
+    // Connexió a la nostra base de dades via msql
     public static void connexioBD() throws SQLException {
         String servidor = "jdbc:mysql://192.168.16.150:3306/";
         String bbdd = "stock";
@@ -61,7 +64,9 @@ public class gestorInventari {
 
     public static void menuBD() throws SQLException, FileNotFoundException, IOException {
 
-        //Menu principal que contè tots els nostres metodes separats per un switch, tenim un nextLine que ens permet fer servir la informació que introdueix el usuari.
+        // Menu principal que contè tots els nostres metodes separats per un switch,
+        // tenim un nextLine que ens permet fer servir la informació que introdueix el
+        // usuari.
         do {
             System.out.println("GESTOR D'INVENTARI");
             System.out.println("1. Gestió de productes");
@@ -115,7 +120,10 @@ public class gestorInventari {
                     prepararComanda();
                     break;
                 case 4:
-
+                    analitzarComanda();
+                    productesMinim(productes, proveedors);
+                    productesMaxim(productes, proveedors);
+                    productesMitjana(productes);
                     break;
                 case 5:
                     exit = true;
@@ -130,7 +138,7 @@ public class gestorInventari {
         // desconexioBD();
     }
 
-    //Un mètode soimple per llistar tots els nostres productes.
+    // Un mètode soimple per llistar tots els nostres productes.
     static void llistarProductes() throws SQLException {
 
         String consulta = "SELECT * FROM PRODUCTES ORDER BY ID_PRODUCTE";
@@ -144,7 +152,7 @@ public class gestorInventari {
 
     }
 
-    //Un mètode per introduïr i donar d'alta un producte.
+    // Un mètode per introduïr i donar d'alta un producte.
     static void altaProductes() throws SQLException {
 
         System.out.println("\nALTA PRODUCTE");
@@ -179,7 +187,7 @@ public class gestorInventari {
         }
     }
 
-    //Modifiquem la informació de un producte, elegirem què volem modificar.
+    // Modifiquem la informació de un producte, elegirem què volem modificar.
     static void modificacioProductes() throws SQLException {
 
         String consulta = "SELECT * FROM PRODUCTES ORDER BY ID_PRODUCTE";
@@ -296,7 +304,9 @@ public class gestorInventari {
             ;
     }
 
-    //Eliminar un producte, fem servir un stmt.execute("SET FOREIGN_KEY_CHECKS=0"); per poder borrar totes les relacions de les taules en la nostra base de dades.
+    // Eliminar un producte, fem servir un stmt.execute("SET FOREIGN_KEY_CHECKS=0");
+    // per poder borrar totes les relacions de les taules en la nostra base de
+    // dades.
     static void baixaProducte() throws SQLException {
 
         System.out.println("Indica la ID del producte que vols eliminar");
@@ -318,7 +328,8 @@ public class gestorInventari {
         }
     }
 
-    //Crea 2 carpetes i truca al mètode de actualització i el de moure fitxers i recorre cada fitxer i llegeix els fitxers.
+    // Crea 2 carpetes i truca al mètode de actualització i el de moure fitxers i
+    // recorre cada fitxer i llegeix els fitxers.
     static void actualitzacioStock() throws SQLException, IOException {
 
         System.out.println("ACTUALITZACIÓ D'ESTOC");
@@ -346,7 +357,7 @@ public class gestorInventari {
 
     }
 
-    //Separa la informació del .txt i actualitza el stock.
+    // Separa la informació del .txt i actualitza el stock.
     static void actualitzarFitxerBD(File file) throws IOException, SQLException {
 
         // llegeix caracter a caracter
@@ -403,7 +414,8 @@ public class gestorInventari {
         }
     }
 
-    //Mou directament el fitxer, de la carpeta PATHPENDENTS i el mou a  la carpeta PATHPROCESSADES.
+    // Mou directament el fitxer, de la carpeta PATHPENDENTS i el mou a la carpeta
+    // PATHPROCESSADES.
     static void moureFitxersBD(File files) throws SQLException, IOException {
 
         FileSystem sistemaFicheros = FileSystems.getDefault();
@@ -413,10 +425,16 @@ public class gestorInventari {
         System.out.println("S'ha mogut a processats el fitxer: " + files.getName());
     }
 
-    //Crea fitxers a partir de la consulta, en la qual, el stock dels productes que crea es de menys de 20. Tambè separa els proveedors i crea un fitxer per cada proveedor i a dintre de cada comanda de proveedor llista els productes als quals els falte més stock.
+    // Crea fitxers a partir de la consulta, en la qual, el stock dels productes que
+    // crea es de menys de 20. Tambè separa els proveedors i crea un fitxer per cada
+    // proveedor i a dintre de cada comanda de proveedor llista els productes als
+    // quals els falte més stock.
     static void prepararComanda() throws SQLException, IOException {
 
         String cons = "SELECT P.ID_PRODUCTE, P.NOM, P.STOCK, PROV.NOM FROM PRODUCTES P,SUBMINISTRA S, PROVEEDORS PROV WHERE PROV.CODI_PROVEEDOR = S.CODI_PROVEEDOR AND S.ID_PRODUCTE = P.ID_PRODUCTE AND STOCK < 20 ORDER BY PROV.CODI_PROVEEDOR;";
+
+        int countprov = 0;
+        int countprod = 0;
 
         PreparedStatement comanda = connexioBD.prepareStatement(cons);
         ResultSet rs = comanda.executeQuery();
@@ -427,31 +445,45 @@ public class gestorInventari {
         if (rs.next()) {
             // primera fila del result set
             prov = rs.getString(4);
-
+            proveedors[countprov] = rs.getString(4);
             wrtr = capcaleraComandes(prov);
 
             do {
                 if (!prov.equals(rs.getString(4))) {
 
+                    // Fem que el array agaifi el proveedor de la base de dades i li afegim un
+                    // counteig al contador de proveedors, el qual ha iniciat hem iniciat a 0.
+                    productes[countprov] = countprod;
+                    countprod = 0;
+                    countprov++;
+                    proveedors[countprov] = rs.getString(4);
+
                     prov = rs.getString(4);
                     wrtr.close();
 
                     wrtr = capcaleraComandes(prov);
-                    
+
                     System.out.println("\nID PRODUCTE: " + rs.getString(1) + " " + "\nNOM PRODUCTE: " + rs.getString(2) + " " + "\nSTOCK PRODUCTE: " + rs.getString(3) + " " + "\nNOM PROVEEDOR: " + rs.getString(4));
                 }
+
+                countprod++;
 
                 wrtr.println("Proveedor: " + rs.getString("PROV.NOM"));
                 wrtr.println("Id del producte: " + rs.getString("ID_PRODUCTE"));
                 wrtr.println("Stock del producte actual: " + rs.getString("STOCK"));
                 wrtr.println(LocalDate.now());
                 wrtr.println("***********************************************");
+
             } while (rs.next());
+            productes[countprov] = countprod;
             wrtr.close();
+
         }
     }
 
-    //Definim un file writer amb la adreça, un bufered writer i print writer per fer servir aquest mètode amb el mètode anterior i aprofitem per escriure una capcelera per cada arxiu creat amb la informació de la nostra empresa.
+    // Definim un file writer amb la adreça, un bufered writer i print writer per
+    // fer servir aquest mètode amb el mètode anterior i aprofitem per escriure una
+    // capcelera per cada arxiu creat amb la informació de la nostra empresa.
     static PrintWriter capcaleraComandes(String prov) throws SQLException, IOException {
 
         FileWriter fw = new FileWriter("files\\COMANDES\\" + prov + "_" + LocalDate.now() + "_" + ".txt");
@@ -465,4 +497,57 @@ public class gestorInventari {
         wrtr.println("********************COMANDA********************");
         return wrtr;
     }
+
+    // Analitzem els arrays amb un bucle per poder imprimir en cas de que un
+    // proveedor no sigui null.
+    static void analitzarComanda() throws SQLException, IOException {
+
+        for (int x = 0; proveedors[x] != null; x++) {
+            System.out.println("Proveedor: " + proveedors[x] + " Te encomanats: " + productes[x] + " productes.");
+        }
+    }
+    
+    public static void productesMinim(int [] productes, String [] proveedor){
+
+        int minim = productes[0];
+        int indxmin = 0;
+
+        for (int i=0; i<productes.length;i++){
+            if (productes[i] < minim){
+                minim=productes[i];
+                indxmin=i;
+            }
+        }
+        
+        System.out.println();
+        System.out.println("El proveedor amb menys productes sol·licitats és: " + proveedors[indxmin]+ ": "+minim);
+    }
+
+    public static void productesMaxim(int [] productes, String [] proveedor){
+
+        int maxim = productes[0];
+        int indxmax = 0;
+        
+        for (int i=0; i<productes.length;i++){
+            if (productes[i] > maxim){
+                maxim=productes[i];  
+                indxmax=i;     
+            }
+        }
+
+        System.out.println("El proveedor amb més productes sol·licitats és: " + proveedor[indxmax] + ": "+maxim);
+
+    }
+        
+    public static void productesMitjana(int [] productes){
+
+        int mitja= 0;    
+        
+        for (int i=0; i<productes.length;i++){
+            mitja += productes[i];
+        }
+        
+        System.out.printf("La mitjana de productes demanats és: ", mitja/productes.length);
+
+    } 
 }
